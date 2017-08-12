@@ -3,8 +3,11 @@ package com.ltree.dtm.boot.conf;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * 事务管理配制类
@@ -16,6 +19,21 @@ import java.util.Map;
 @Component
 @ConfigurationProperties(prefix = "dubbo.dtm")
 public class DtmProperties {
+
+    @PostConstruct
+    private void init() {
+        if (Objects.isNull(mapRelation)) {
+            return;
+        }
+
+        Map<String, List<BeanMethodInfo>> duplicate = new HashMap<>();
+        mapRelation.forEach((k, v) -> {
+            duplicate.put(k.replace("-", "."), v);
+        });
+        mapRelation = duplicate;
+    }
+
+
     /**
      * 映射关系，key为接口class全名
      */

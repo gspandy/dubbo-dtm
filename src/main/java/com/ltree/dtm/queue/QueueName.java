@@ -9,6 +9,6 @@ package com.ltree.dtm.queue;
  */
 public class QueueName {
     /** 异步回滚队列 **/
-    public static final String ASYNC_QUEUE = "async:queue";
+    public static final String ASYNC_QUEUE = "async:rollback:queue";
 
 }
