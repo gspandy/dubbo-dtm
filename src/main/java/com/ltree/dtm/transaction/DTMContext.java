@@ -47,6 +47,10 @@ public class DTMContext {
     }
 
     public void begin() {
+        if (isBegin) {
+            throw new RuntimeException("不能嵌套开启回滚事务");
+        }
+
         this.isBegin = Boolean.TRUE;
     }
 
