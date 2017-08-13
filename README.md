@@ -21,11 +21,11 @@ DTM的出现主要解决dubbo分布式应该用事务回滚问题，此框架使
 
 > yml配制：
 >> async-num： 异步回滚线程池的数量，默认cpu核数
->> map-relation： 调用方法与反操作方法配制关系
+   map-relation： 调用方法与反操作方法配制关系
 >>> method：调用方法 
->>> rollback-method：反操作方法 
->>> retries：回滚方法失败尝试重试次数 
->>> anyc：是否异步回滚
+    rollback-method：反操作方法 
+    retries：回滚方法失败尝试重试次数 
+    async：是否异步回滚
 
 ``` yml
 dubbo.dtm:
@@ -36,13 +36,13 @@ dubbo.dtm:
           method: add
           rollback-method: del
           retries: 1
-          anyc: false
+          async: false
 
-    com-xxx-rpc-xxxSXXervice:
+    com-xxx-rpc-xxxSXXService:
           method: add
           rollback-method: del
           retries: 1
-          anyc: false
+          async: false
 ```
 
 
