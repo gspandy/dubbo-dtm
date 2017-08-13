@@ -1,4 +1,4 @@
-dubbo分布式事务处理组件DTM
+dubbo事务处理组件DTM
 ===
 
 ## DTM (dubbo transaction Manager) 说明
