@@ -1,6 +1,7 @@
 package com.ltree.dtm.transaction.rollback;
 
 import com.alibaba.dubbo.rpc.Invocation;
+import com.ltree.dtm.Constants;
 import com.ltree.dtm.queue.QueueName;
 import com.ltree.dtm.queue.QueueService;
 import com.ltree.dtm.transaction.DTMInvocation;
@@ -13,9 +14,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.lang.reflect.Method;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -28,6 +27,8 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component
 public class InversionMethodRollback implements TransactionRollback, ApplicationContextAware {
     private static final Logger LOGGER = LoggerFactory.getLogger(InversionMethodRollback.class);
+
+    private final Map<String, Class<?>> classCache = new HashMap<>();
 
     private Map<String, Method> methodCache = new ConcurrentHashMap<>();
 
@@ -47,9 +48,10 @@ public class InversionMethodRollback implements TransactionRollback, Application
     public void invoke(DTMInvocation dtmInvocation) throws Exception {
         Invocation invocation = dtmInvocation.getInvocation();
         Object service = getBean(dtmInvocation.getClassName());
-        methodCache.putIfAbsent(dtmInvocation.getClassName(), service.getClass()
-                .getMethod(dtmInvocation.getRollbackMethod(), invocation.getParameterTypes()));
-        Method methodObj = methodCache.get(service);
+        String key = dtmInvocation.getClassName().concat(Constants.SEPARATOR).concat(dtmInvocation.getMethod());
+        methodCache.putIfAbsent(key, service.getClass().getMethod(dtmInvocation.getRollbackMethod(),
+                invocation.getParameterTypes()));
+        Method methodObj = methodCache.get(key);
         methodObj.invoke(service, invocation.getArguments());
     }
 
@@ -59,37 +61,41 @@ public class InversionMethodRollback implements TransactionRollback, Application
     }
 
     private Object getBean(String className) {
-        return applicationContext.getBean(className);
+        try {
+            Class clazz = classCache.get(className);
+            if (Objects.isNull(clazz)) {
+                synchronized (classCache) {
+                    if (!classCache.containsKey(className)) {
+                        classCache.put(className, Class.forName(className));
+                    }
+
+                    clazz = classCache.get(className);
+                }
+            }
+
+            return applicationContext.getBean(clazz);
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void delegation(DTMInvocation invocation) {
-        Object service = getBean(invocation.getClassName());
-
         if (invocation.isAsync()) {
             queueService.add(QueueName.ASYNC_QUEUE, invocation);
 
             return;
         }
 
-        invoke(service, invocation);
-    }
-
-    private void invoke(Object service, DTMInvocation dtmInvocation) {
-        Invocation invocation = dtmInvocation.getInvocation();
-
         try {
-            methodCache.putIfAbsent(dtmInvocation.getClassName(), service.getClass()
-                    .getMethod(dtmInvocation.getRollbackMethod(), invocation.getParameterTypes()));
-            Method methodObj = methodCache.get(service);
-            methodObj.invoke(service, invocation.getArguments());
+            invoke(invocation);
         } catch (Exception e) {
-            if (dtmInvocation.isFinish()) {
-                LOGGER.error(String.format("rollback invocation:%s", dtmInvocation), e);
+            if (invocation.isFinish()) {
+                LOGGER.error(String.format("rollback invocation:%s", invocation), e);
                 return;
             }
 
-            dtmInvocation.incrExecutions();
-            delegation(dtmInvocation);
+            invocation.incrExecutions();
+            delegation(invocation);
         }
     }
 }

@@ -13,7 +13,7 @@ import com.ltree.dtm.transaction.Trace.MethodInvokeTrace;
  * @version 1.0, 2017/8/8
  * @since 1.0
  */
-@Activate(group = Constants.CONSUMER, value = Constants.TRANSACTION_KEY)
+@Activate(group = Constants.CONSUMER)
 public class TransactionFilter implements Filter {
 
     @Override

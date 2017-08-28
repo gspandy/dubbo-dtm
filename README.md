@@ -33,13 +33,13 @@ dubbo.dtm:
   map-relation:
     # 这里接口全名称需要把"."替换成"-"
     com-xxx-rpc-xxxService:
-          method: add
+        - method: add
           rollback-method: del
           retries: 1
           async: false
 
     com-xxx-rpc-xxxSXXService:
-          method: add
+        - method: add
           rollback-method: del
           retries: 1
           async: false

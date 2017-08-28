@@ -74,4 +74,8 @@ public class DTMContext {
     public List<DTMInvocation> getInvocations() {
         return new ArrayList<>(invocations);
     }
+
+    public void free() {
+        this.invocations.clear();
+    }
 }

@@ -32,7 +32,7 @@ public class ThreadLocalTransactionManager implements TransactionManager {
 
     @PostConstruct
     public void init() {
-        Assert.isNull(properties.getMapRelation(), "DTM事务管理器还未配制不能直接使用");
+        Assert.notNull(properties.getMapRelation(), "DTM事务管理器还未配制不能直接使用");
         DTMContext.setProperties(properties);
         LOGGER.debug("properties:{}", properties);
     }
@@ -44,7 +44,9 @@ public class ThreadLocalTransactionManager implements TransactionManager {
 
     @Override
     public void rollback() {
-        List<DTMInvocation> invocations = DTMContext.get().getInvocations();
+        DTMContext dtmContext = DTMContext.get();
+        List<DTMInvocation> invocations = dtmContext.getInvocations();
         ITransactionRollback.rollback(invocations);
+        dtmContext.free();
     }
 }
