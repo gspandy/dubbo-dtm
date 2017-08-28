@@ -19,7 +19,7 @@ public class TransactionFilter implements Filter {
     @Override
     public Result invoke(Invoker<?> invoker, Invocation invocation) throws RpcException {
         Result result = invoker.invoke(invocation);
-        // 如果是injvm协议，则使用不用理用直接使用jdbc事务回滚
+        // 如果是injvm协议，则使用不用理会直接使用jdbc本地事务回滚
         if (StringUtils.isEquals(invoker.getUrl().getProtocol(), Constants.LOCAL_PROTOCOL)) {
             return result;
         }
